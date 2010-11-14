@@ -1,0 +1,86 @@
+<html>
+<head>
+    <title> Newspeak Kaleidoscope</title>
+    <script type="text/javascript">
+    var words = {
+        "NOUN" : { 
+            "SNG" : ["dog", "cat", "pie", "cow", "key", "love", "babble"],
+            "PLR" : ["dogs", "cats", "pies", "cows", "keys", "thoughts", "rants"],
+            },
+        "VERB" : {
+            "INTRS" : ["jumps", "sits", "waits"],
+            "TRANS" : ["eats", "watches", "observes", "ignores"],
+        },
+        "ADJ" : {
+            "" : ["clean", "soft", "ugly", "good"],
+        },
+        "ADV" : {
+            "INTS" : ["really", "very"],
+            "V" : ["quickly", "slowly", "oddly"],
+        },
+        "DET" : {
+            "SNG" : ["the", "a", "that", "this", ""],
+            "PLR" : ["some", "those", "these", ""],
+        }
+    }
+    var rules = [
+    // VAR, Construction, Rel P(choose)
+    "SENTENCE", "$NOUNPHRASE $VERBPHRASE.", 1,
+    
+    "NOUNPHRASE", "$DET_SNG $ADJPHRASE $NOUN_SNG", 2,
+    "NOUNPHRASE", "$DET_PLR $ADJPHRASE $NOUN_PLR", 0,
+    
+    "ADJPHRASE", "", 1,
+    "ADJPHRASE", "$ADJ", 3,
+    "ADJPHRASE", "$ADVPHRASE-INTS $ADJ", 2,
+    
+    "VERBPHRASE", "$VERB_INTRS", 2,
+    "VERBPHRASE", "$VERB_TRANS $NOUNPHRASE", 3,
+    "VERBPHRASE", "$VERBPHRASE $ADVPHRASE-V", 2,
+    
+    "ADVPHRASE-INTS", "$ADV_INTS", 2,
+    "ADVPHRASE-INTS", "$ADV_INTS $ADVPHRASE-INTS", 1,
+    
+    "ADVPHRASE-V", "$ADV_V", 3,
+    "ADVPHRASE-V", "$ADV_INTS $ADVPHRASE-V", 1,
+    ];
+    
+    var pRegex = new RegExp("\\$([A-Z_-]+)");
+    
+    function constr(pos){
+        if(pos.indexOf("_") != -1 || words[pos]){
+            pos = pos.split("_").concat("");
+            words[pos[0]][pos[1]].sort(function(){ return 0.5 - Math.random(); });
+            return words[pos[0]][pos[1]][0];
+        }
+        
+        var prules = [];
+        for(var i = 0; i < rules.length; i += 3){
+            if(rules[i] == pos){
+                for(var j = 0; j < rules[i+2]; j++){
+                    prules.push(rules[i+1]);
+                }
+            }
+        }
+        prules.sort(function(){ return 0.5 - Math.random(); });
+        var pr = prules[0];
+        console.log(pos + " : " + pr);
+        while(1){
+            var mr = pRegex.exec(pr);
+            if(!mr)
+                break;
+            var rep = mr[1];
+            pr = pr.replace(pRegex, constr(rep));
+        }
+        console.log(pos + " : " + pr);
+        return pr;
+    }
+    document.write(constr("SENTENCE"));
+    </script>
+</head>
+<body>
+    <div>
+        Newspeak
+    <div>
+</body>
+</html>
